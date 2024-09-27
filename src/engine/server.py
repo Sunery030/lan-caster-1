@@ -33,13 +33,13 @@ def quit(signal=None, frame=None):
     except BaseException:
         pass
 
-    #try:
-    str="\n\n          ==== Average Map Step Time ====\n"
-    for mapName in SERVER['maps']:
-        str += f"\n    {mapName:>20} {round(SERVER['maps'][mapName].getStatsAvgMs(),2)} ms"
-    log(str + "\n", "VERBOSE")
-    #except BaseException:
-    # #   pass
+    try:
+        str="\n\n          ==== Average Map Step Time ====\n"
+        for mapName in SERVER['maps']:
+            str += f"\n    {mapName:>20} {round(SERVER['maps'][mapName].getStatsAvgMs(),2)} ms"
+        log(str + "\n", "VERBOSE")
+    except BaseException:
+        pass
 
     global profiler
     if profiler:
@@ -617,6 +617,7 @@ class Server(dict):
                     destinationIP=self['players'][ipport]['ip'],
                     destinationPort=self['players'][ipport]['port']
                     )
+                player['lastStepMsgSent'] = time.perf_counter()
             # reset the change detection on player.
             self.resetPlayerChanged(self['players'][ipport])
 
@@ -707,6 +708,7 @@ class Server(dict):
 
     def addPlayer(self, ip, port, ipport, msg):
         """Add a client as a new player. Assumes client is not already a player (not yet in self['players']).
+        Also, assumes there are still still players in self['unassignedPlayerSprites']
 
         Args:
             ip (str): IP Address of sender.
@@ -733,7 +735,8 @@ class Server(dict):
             'actionText': False,  # set to false if not in use, rather than removing.
             'lastActionText': False,
             'marqueeText': False,
-            'lastMarqueeText': False  # set to false if not in use, rather than removing.
+            'lastMarqueeText': False,  # set to false if not in use, rather than removing.
+            'lastStepMsgSent': 0
             }
         # Also add player to self['playersByNum'] with the playerNumber so we can look up either way.
         self['playersByNum'][sprite['playerNumber']] = self['players'][ipport]
